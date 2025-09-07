@@ -1,0 +1,33 @@
+{
+  "name": "smart-writing-assistant",
+  "version": "2.0.0",
+  "description": "Advanced AI-powered writing assistant with grammar checking, style suggestions, tone analysis, and Gmail email analysis",
+  "main": "background-js.js",
+  "scripts": {
+    "lint": "eslint *.js",
+    "lint:fix": "eslint *.js --fix",
+    "format": "prettier --write *.js *.html *.css *.json",
+    "format:check": "prettier --check *.js *.html *.css *.json",
+    "check": "npm run lint && npm run format:check",
+    "fix": "npm run lint:fix && npm run format"
+  },
+  "keywords": [
+    "chrome-extension",
+    "writing-assistant",
+    "ai",
+    "gmail",
+    "openai",
+    "grammar-checking"
+  ],
+  "author": "Smart Writing Assistant Team",
+  "license": "MIT",
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.3",
+    "prettier": "^3.2.5"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

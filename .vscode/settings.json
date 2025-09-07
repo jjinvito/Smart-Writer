@@ -1,0 +1,24 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "eslint.validate": [
+    "javascript"
+  ],
+  "files.associations": {
+    "*.js": "javascript"
+  },
+  "emmet.includeLanguages": {
+    "javascript": "html"
+  },
+  "files.exclude": {
+    "node_modules": true,
+    "*.log": true
+  },
+  "search.exclude": {
+    "node_modules": true,
+    "*.log": true
+  }
+} 

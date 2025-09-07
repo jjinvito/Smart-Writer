@@ -1,0 +1,556 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Smart Writing Assistant - Settings</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        min-height: 100vh;
+        padding: 40px 20px;
+      }
+
+      .container {
+        max-width: 700px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #3b82f6, #6366f1);
+        color: white;
+        padding: 32px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      .header p {
+        font-size: 16px;
+        opacity: 0.9;
+      }
+
+      .content {
+        padding: 32px;
+      }
+
+      .section {
+        margin-bottom: 32px;
+      }
+
+      .section-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .icon {
+        width: 24px;
+        height: 24px;
+        stroke: currentColor;
+        stroke-width: 2;
+        fill: none;
+      }
+
+      .form-group {
+        margin-bottom: 24px;
+      }
+
+      .form-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+      }
+
+      .form-input {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 14px;
+        transition:
+          border-color 0.2s,
+          box-shadow 0.2s;
+      }
+
+      .form-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      .form-input[type='password'] {
+        font-family: monospace;
+      }
+
+      .form-help {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 6px;
+        line-height: 1.5;
+      }
+
+      .form-help a {
+        color: #3b82f6;
+        text-decoration: none;
+      }
+
+      .form-help a:hover {
+        text-decoration: underline;
+      }
+
+      .validation-status {
+        font-size: 12px;
+        margin-top: 6px;
+        padding: 4px 8px;
+        border-radius: 4px;
+      }
+
+      .validation-success {
+        color: #059669;
+        background: #ecfdf5;
+        border: 1px solid #d1fae5;
+      }
+
+      .validation-error {
+        color: #dc2626;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+      }
+
+      .checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-top: 16px;
+      }
+
+      .checkbox-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px;
+        background: #f8fafc;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+      }
+
+      .checkbox-item input[type='checkbox'] {
+        width: 18px;
+        height: 18px;
+        accent-color: #3b82f6;
+        margin-top: 2px;
+      }
+
+      .checkbox-item label {
+        font-size: 14px;
+        color: #374151;
+        cursor: pointer;
+        line-height: 1.4;
+      }
+
+      .checkbox-desc {
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 4px;
+      }
+
+      .button {
+        background: linear-gradient(135deg, #3b82f6, #6366f1);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      }
+
+      .button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .button-secondary {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #d1d5db;
+      }
+
+      .button-secondary:hover {
+        background: #e2e8f0;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .status-message {
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        margin-top: 16px;
+        display: none;
+      }
+
+      .status-success {
+        background: #ecfdf5;
+        border: 1px solid #d1fae5;
+        color: #065f46;
+      }
+
+      .status-error {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #dc2626;
+      }
+
+      .status-info {
+        background: #eff6ff;
+        border: 1px solid #dbeafe;
+        color: #1d4ed8;
+      }
+
+      .info-box {
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 24px;
+      }
+
+      .info-box h3 {
+        font-size: 16px;
+        font-weight: 600;
+        color: #0369a1;
+        margin-bottom: 8px;
+      }
+
+      .info-box p {
+        font-size: 14px;
+        color: #0369a1;
+        line-height: 1.5;
+      }
+
+      .info-box ul {
+        margin-top: 8px;
+        padding-left: 16px;
+      }
+
+      .info-box li {
+        font-size: 14px;
+        color: #0369a1;
+        margin-bottom: 4px;
+      }
+
+      .test-result {
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        margin-top: 16px;
+        display: none;
+        white-space: pre-wrap;
+      }
+
+      .test-success {
+        background: #ecfdf5;
+        border: 1px solid #d1fae5;
+        color: #065f46;
+      }
+
+      .test-error {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #dc2626;
+      }
+
+      .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top: 2px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .password-toggle {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+        transition: background-color 0.2s;
+      }
+
+      .password-toggle:hover {
+        background: rgba(0, 0, 0, 0.1);
+      }
+
+      .eye-icon {
+        stroke: currentColor;
+        stroke-width: 2;
+        fill: none;
+      }
+
+      .form-input[type='password'] {
+        padding-right: 40px;
+      }
+
+      .form-group {
+        position: relative;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          margin: 0 10px;
+        }
+
+        .content {
+          padding: 20px;
+        }
+
+        .button-group {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Smart Writing Assistant</h1>
+        <p>Configure your writing assistant settings</p>
+      </div>
+
+      <div class="content">
+        <div class="info-box">
+          <h3>Getting Started</h3>
+          <p>
+            To use the Smart Writing Assistant, you'll need an OpenAI API key. Here's how to get
+            one:
+          </p>
+          <ul>
+            <li>
+              Visit
+              <a href="https://platform.openai.com/account/api-keys" target="_blank"
+                >OpenAI API Keys</a
+              >
+            </li>
+            <li>Create an account or sign in</li>
+            <li>Click "Create new secret key"</li>
+            <li>Copy the key (starts with "sk-")</li>
+            <li>Paste it in the field below</li>
+          </ul>
+        </div>
+
+        <div class="section">
+          <div class="section-title">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path
+                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+              />
+            </svg>
+            API Configuration
+          </div>
+
+          <div class="form-group">
+            <label for="apiKey" class="form-label">OpenAI API Key</label>
+            <input type="password" id="apiKey" class="form-input" placeholder="sk-..." />
+            <div id="validationStatus" class="validation-status"></div>
+            <div class="form-help">
+              Your API key is stored securely in your browser and never shared with us.
+            </div>
+          </div>
+
+          <div class="button-group">
+            <button id="testButton" class="button">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M9 12l2 2 4-4" />
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z" />
+              </svg>
+              Test API Connection
+            </button>
+            <button id="saveButton" class="button">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17,21 17,13 7,13 7,21" />
+                <polyline points="7,3 7,8 15,8" />
+              </svg>
+              Save Settings
+            </button>
+          </div>
+
+          <div id="testResult" class="test-result"></div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path
+                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+              />
+            </svg>
+            Writing Preferences
+          </div>
+
+          <div class="form-group">
+            <label for="defaultTone" class="form-label">Default Tone</label>
+            <select id="defaultTone" class="form-input">
+              <option value="professional">Professional</option>
+              <option value="friendly">Friendly</option>
+              <option value="concise">Concise</option>
+              <option value="formal">Formal</option>
+              <option value="casual">Casual</option>
+              <option value="persuasive">Persuasive</option>
+            </select>
+            <div class="form-help">
+              This tone will be selected by default when generating content.
+            </div>
+          </div>
+
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" id="autoGrammarCheck" />
+              <div>
+                <label for="autoGrammarCheck">Enable automatic grammar checking</label>
+                <div class="checkbox-desc">
+                  Automatically check grammar and provide suggestions while you write in email
+                  clients.
+                </div>
+              </div>
+            </div>
+
+            <div class="checkbox-item">
+              <input type="checkbox" id="showSuggestions" />
+              <div>
+                <label for="showSuggestions">Show writing suggestions</label>
+                <div class="checkbox-desc">
+                  Display tone analysis and improvement suggestions in the writing interface.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+            </svg>
+            Gmail Integration
+          </div>
+
+          <div class="info-box">
+            <h3>📧 Email Analysis Features</h3>
+            <p>
+              The extension can analyze your Gmail emails to create prioritized to-do lists and
+              identify important actions needed.
+            </p>
+            <ul>
+              <li>Analyze recent emails for actionable items</li>
+              <li>Categorize emails by type (Sales, Urgent, Meeting, etc.)</li>
+              <li>Generate prioritized to-do lists</li>
+              <li>Identify deadlines and follow-up actions</li>
+            </ul>
+          </div>
+
+          <div class="checkbox-group">
+            <div class="checkbox-item">
+              <input type="checkbox" id="enableEmailAnalysis" />
+              <div>
+                <label for="enableEmailAnalysis">Enable automatic email analysis</label>
+                <div class="checkbox-desc">
+                  Analyze Gmail emails daily for important tasks and actions needed.
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="analysisFrequency" class="form-label">Analysis Frequency</label>
+              <select id="analysisFrequency" class="form-input">
+                <option value="manual">Manual only</option>
+                <option value="daily">Daily</option>
+                <option value="hourly">Every hour</option>
+              </select>
+              <div class="form-help">
+                How often to automatically analyze your emails for actionable items.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">
+            <svg class="icon" viewBox="0 0 24 24">
+              <path
+                d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"
+              />
+            </svg>
+            Advanced Settings
+          </div>
+
+          <div class="button-group">
+            <button id="resetButton" class="button-secondary">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+              </svg>
+              Reset to Defaults
+            </button>
+          </div>
+        </div>
+
+        <div id="statusMessage" class="status-message"></div>
+      </div>
+    </div>
+
+    <script src="options-js.js"></script>
+  </body>
+</html>

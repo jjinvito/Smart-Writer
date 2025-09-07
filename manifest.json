@@ -1,0 +1,41 @@
+{
+  "name": "Smart Writing Assistant",
+  "version": "2.0.0",
+  "description": "Advanced AI-powered writing assistant with grammar checking, style suggestions, tone analysis, and Gmail email analysis",
+  "manifest_version": 3,
+  "permissions": ["activeTab", "storage", "clipboardWrite", "identity"],
+  "host_permissions": [
+    "https://api.anthropic.com/*",
+    "https://mail.google.com/*",
+    "https://outlook.live.com/*",
+    "https://outlook.office.com/*",
+    "https://www.googleapis.com/*"
+  ],
+  "oauth2": {
+    "client_id": "387570820506-8nfriodpd45r7kv291198o80074n1m7n.apps.googleusercontent.com",
+    "scopes": ["https://www.googleapis.com/auth/gmail.readonly"]
+  },
+  "externally_connectable": {
+    "matches": ["https://*.google.com/*"]
+  },
+  "action": {
+    "default_popup": "popup-html.html",
+    "default_title": "Smart Writing Assistant"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://mail.google.com/*",
+        "https://outlook.live.com/*",
+        "https://outlook.office.com/*",
+        "https://docs.google.com/*"
+      ],
+      "js": ["content-script.js"],
+      "css": ["content-css.css"]
+    }
+  ],
+  "background": {
+    "service_worker": "background-js.js"
+  },
+  "options_page": "options-html.html"
+}
