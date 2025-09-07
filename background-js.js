@@ -63,6 +63,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       .then(response => sendResponse(response))
       .catch(error => sendResponse({ success: false, error: error.message }));
     return true;
+  } else if (request.action === 'deleteSpamEmail') {
+    handleSpamEmailDeletion(request, sendResponse);
+    return true;
   }
 });
 
@@ -519,6 +522,7 @@ async function handleEmailAnalysis(request, sendResponse) {
         success: true,
         analysis: cachedData.emailAnalysisCache.analysis,
         emailCount: cachedData.emailAnalysisCache.emailCount,
+        allEmails: cachedData.emailAnalysisCache.allEmails || [], // Include all emails for viewing
         cached: true,
         cacheAge: Math.round(cacheAge / 60000), // minutes
       });
@@ -557,6 +561,7 @@ async function handleEmailAnalysis(request, sendResponse) {
       success: true,
       analysis,
       emailCount: emailDetails.length,
+      allEmails: emailDetails, // Include all emails for viewing
       cached: false,
     });
   } catch (error) {
@@ -586,14 +591,23 @@ async function analyzeEmailsWithAI(emails) {
     .map(email => `From: ${email.from}\nSubject: ${email.subject}\nSnippet: ${email.snippet}`)
     .join('\n\n---\n\n');
 
-  const prompt = `Analyze these recent emails and create a prioritized to-do list. For each important email, determine:
+  const prompt = `Analyze these recent emails and create a prioritized to-do list. For each email, determine:
 
-1. Category: SALES, INFO, PROMO, URGENT, MEETING, or OTHER
+1. Category: SALES, INFO, PROMO, URGENT, MEETING, SPAM, or OTHER
 2. Priority: HIGH, MEDIUM, or LOW  
 3. Action needed (if any)
 4. Deadline (if mentioned or implied)
+5. Whether it's SPAM (unsolicited promotional, phishing, suspicious content)
 
-Focus on emails that require action, response, or follow-up. Ignore promotional emails unless they're business-critical.
+For spam detection, look for:
+- Unsolicited promotional content
+- Suspicious sender patterns
+- Generic/bulk email indicators
+- Phishing attempts
+- Misleading subject lines
+- Excessive promotional language
+
+Focus on emails that require action, response, or follow-up for actionable items. Classify obvious spam separately.
 
 Emails to analyze:
 ${emailSummary}
@@ -605,22 +619,35 @@ Respond in JSON format:
       "id": "email_id_here",
       "subject": "email subject",
       "from": "sender name/email", 
-      "category": "SALES|INFO|PROMO|URGENT|MEETING|OTHER",
+      "category": "SALES|INFO|PROMO|URGENT|MEETING|SPAM|OTHER",
       "priority": "HIGH|MEDIUM|LOW",
       "action": "specific action needed",
       "deadline": "deadline if any",
-      "context": "brief context/summary"
+      "context": "brief context/summary",
+      "isSpam": false
+    }
+  ],
+  "spam": [
+    {
+      "id": "email_id_here",
+      "subject": "email subject",
+      "from": "sender name/email",
+      "reason": "why it's classified as spam",
+      "context": "brief context/summary",
+      "spamType": "promotional|phishing|suspicious|bulk"
     }
   ],
   "summary": {
     "totalEmails": 0,
     "actionableEmails": 0,
+    "spamEmails": 0,
     "categories": {
       "SALES": 0,
       "INFO": 0,
       "PROMO": 0,
       "URGENT": 0,
       "MEETING": 0,
+      "SPAM": 0,
       "OTHER": 0
     }
   }
@@ -964,4 +991,44 @@ Format as actionable recommendations with examples.`;
         console.error('Improvement suggestions error:', error);
         return { success: false, error: error.message };
     }
+}
+
+async function handleSpamEmailDeletion(request, sendResponse) {
+  try {
+    const gmailService = new GmailAnalysisService();
+    
+    // Get authentication token
+    const token = await gmailService.authenticateGmail();
+    
+    // Delete the email using Gmail API
+    const response = await fetch(
+      `${gmailService.GMAIL_API_BASE}/users/me/messages/${request.emailId}`,
+      {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+    
+    if (response.ok) {
+      sendResponse({ 
+        success: true, 
+        message: 'Email deleted successfully' 
+      });
+    } else {
+      const errorData = await response.text();
+      sendResponse({ 
+        success: false, 
+        error: `Failed to delete email: ${response.status} ${errorData}` 
+      });
+    }
+  } catch (error) {
+    console.error('Error deleting spam email:', error);
+    sendResponse({ 
+      success: false, 
+      error: error.message 
+    });
+  }
 }

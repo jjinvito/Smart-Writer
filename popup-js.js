@@ -420,16 +420,16 @@ style.textContent = `
 document.head.appendChild(style);
 
 // Email Analysis functionality
-let currentView = 'actionable'; // Track current view: 'actionable' or 'all'
+let currentView = 'actionable'; // Track current view: 'actionable', 'all', or 'spam'
 let cachedAllEmails = []; // Store all emails for viewing
+let cachedSpamEmails = []; // Store spam emails for viewing
 
 function initializeEmailAnalysis() {
     const analyzeBtn = document.getElementById('analyzeEmailsBtn');
     const testBtn = document.getElementById('testGmailBtn');
-    const refreshBtn = document.getElementById('refreshAnalysisBtn');
-    const clearCacheBtn = document.getElementById('clearCacheBtn');
     const totalEmailsStat = document.getElementById('totalEmailsStat');
     const actionableEmailsStat = document.getElementById('actionableEmailsStat');
+    const spamEmailsStat = document.getElementById('spamEmailsStat');
     
     if (analyzeBtn) {
         analyzeBtn.addEventListener('click', async () => {
@@ -443,17 +443,6 @@ function initializeEmailAnalysis() {
         });
     }
     
-    if (refreshBtn) {
-        refreshBtn.addEventListener('click', async () => {
-            await refreshAnalysis();
-        });
-    }
-    
-    if (clearCacheBtn) {
-        clearCacheBtn.addEventListener('click', async () => {
-            await clearCache();
-        });
-    }
     
     // Add click handlers for stats
     if (totalEmailsStat) {
@@ -472,8 +461,14 @@ function initializeEmailAnalysis() {
         });
     }
     
-    // Check cache status on initialization
-    checkCacheStatus();
+    if (spamEmailsStat) {
+        console.log('Setting up click handler for spam emails stat');
+        spamEmailsStat.addEventListener('click', () => {
+            console.log('Spam emails stat clicked');
+            switchView('spam');
+        });
+    }
+    
 }
 
 async function analyzeRecentEmails() {
@@ -522,6 +517,12 @@ async function analyzeRecentEmails() {
             console.log('Stored all emails in cache:', cachedAllEmails.length);
         }
         
+        // Store spam emails for viewing
+        if (analysisResult.analysis && analysisResult.analysis.spam) {
+            cachedSpamEmails = analysisResult.analysis.spam;
+            console.log('Stored spam emails in cache:', cachedSpamEmails.length);
+        }
+        
         // Display results
         displayEmailAnalysis(analysisResult.analysis, analysisResult.emailCount, analysisResult.cached);
         
@@ -549,6 +550,7 @@ function displayEmailAnalysis(analysis, totalEmails, cached = false) {
   // Update summary stats
   document.getElementById('totalEmails').textContent = totalEmails;
   document.getElementById('actionableEmails').textContent = analysis.todos.length;
+  document.getElementById('spamEmails').textContent = analysis.spam ? analysis.spam.length : 0;
   summaryDiv.style.display = 'block';
 
   // Display todo items
@@ -564,10 +566,6 @@ function displayEmailAnalysis(analysis, totalEmails, cached = false) {
     todoListDiv.appendChild(todoItem);
   });
 
-  // Update cache status if this was a fresh analysis
-  if (!cached) {
-    checkCacheStatus();
-  }
 }
 
 function createTodoElement(todo, index) {
@@ -610,15 +608,19 @@ function switchView(view) {
     // Update active state of stat buttons
     const totalEmailsStat = document.getElementById('totalEmailsStat');
     const actionableEmailsStat = document.getElementById('actionableEmailsStat');
+    const spamEmailsStat = document.getElementById('spamEmailsStat');
     
-    if (totalEmailsStat && actionableEmailsStat) {
+    if (totalEmailsStat && actionableEmailsStat && spamEmailsStat) {
         totalEmailsStat.classList.toggle('active', view === 'all');
         actionableEmailsStat.classList.toggle('active', view === 'actionable');
+        spamEmailsStat.classList.toggle('active', view === 'spam');
     }
     
     // Display appropriate content
     if (view === 'all') {
         displayAllEmails();
+    } else if (view === 'spam') {
+        displaySpamEmails();
     } else {
         displayActionableEmails();
     }
@@ -642,6 +644,24 @@ function displayAllEmails() {
     });
 }
 
+function displaySpamEmails() {
+    const todoListDiv = document.getElementById('todoList');
+    
+    console.log('Displaying spam emails. Count:', cachedSpamEmails.length);
+    
+    if (cachedSpamEmails.length === 0) {
+        todoListDiv.innerHTML = '<div class="no-todos">🎉 No spam emails detected today!</div>';
+        return;
+    }
+    
+    todoListDiv.innerHTML = '';
+    
+    cachedSpamEmails.forEach((spam, index) => {
+        const spamItem = createSpamElement(spam, index);
+        todoListDiv.appendChild(spamItem);
+    });
+}
+
 function displayActionableEmails() {
     // This will be called when switching back to actionable view
     // We need to reload the cached analysis to show actionable items
@@ -654,6 +674,52 @@ function displayActionableEmails() {
             console.log('Failed to load cached analysis:', result.error);
         }
     });
+}
+
+function createSpamElement(spam, index) {
+    const spamDiv = document.createElement('div');
+    spamDiv.className = 'todo-item spam-item';
+    
+    const spamTypeColors = {
+        promotional: '#f59e0b',
+        phishing: '#ef4444',
+        suspicious: '#dc2626',
+        bulk: '#6b7280'
+    };
+    
+    spamDiv.innerHTML = `
+        <div class="todo-header">
+            <span class="todo-category" style="background-color: ${spamTypeColors[spam.spamType] || '#ef4444'}">
+                SPAM
+            </span>
+            <span class="todo-priority priority-high">
+                ${spam.spamType?.toUpperCase() || 'SPAM'}
+            </span>
+        </div>
+        <div class="todo-content">
+            <h4 class="todo-subject">${spam.subject}</h4>
+            <p class="todo-from">From: ${spam.from}</p>
+            <p class="todo-action">🚫 ${spam.reason}</p>
+            <p class="todo-deadline">${spam.context}</p>
+        </div>
+        <div class="spam-actions">
+            <button class="small-btn delete-spam-btn" data-spam-id="${spam.id}" title="Delete Email">
+                🗑️ Delete
+            </button>
+            <button class="small-btn ignore-spam-btn" data-spam-id="${spam.id}" title="Mark as Not Spam">
+                ✅ Not Spam
+            </button>
+        </div>
+    `;
+    
+    // Add event listeners for spam actions
+    const deleteBtn = spamDiv.querySelector('.delete-spam-btn');
+    const ignoreBtn = spamDiv.querySelector('.ignore-spam-btn');
+    
+    deleteBtn.addEventListener('click', () => handleSpamAction('delete', spam.id, spamDiv));
+    ignoreBtn.addEventListener('click', () => handleSpamAction('ignore', spam.id, spamDiv));
+    
+    return spamDiv;
 }
 
 function createEmailElement(email, index) {
@@ -683,71 +749,6 @@ function createEmailElement(email, index) {
     return emailDiv;
 }
 
-async function checkCacheStatus() {
-  try {
-    const cacheStatus = await new Promise(resolve => {
-      chrome.runtime.sendMessage({ action: 'getEmailCacheStatus' }, resolve);
-    });
-
-    const cacheStatusDiv = document.getElementById('cacheStatus');
-    const cacheAgeSpan = document.getElementById('cacheAge');
-
-    if (cacheStatus.success && cacheStatus.hasCache) {
-      cacheStatusDiv.style.display = 'flex';
-      cacheAgeSpan.textContent = `${cacheStatus.remainingMinutes}`;
-
-      // Load cached analysis data
-      const cachedAnalysis = await new Promise(resolve => {
-        chrome.runtime.sendMessage({ action: 'loadCachedAnalysis' }, resolve);
-      });
-
-          if (cachedAnalysis.success) {
-        cachedAllEmails = cachedAnalysis.allEmails || [];
-        console.log('Loaded cached all emails:', cachedAllEmails.length);
-        displayEmailAnalysis(cachedAnalysis.analysis, cachedAnalysis.emailCount, true);
-    }
-    } else {
-      cacheStatusDiv.style.display = 'none';
-    }
-  } catch (error) {
-    console.error('Error checking cache status:', error);
-  }
-}
-
-async function refreshAnalysis() {
-  // Clear cache and re-analyze
-  await clearCache();
-  await analyzeRecentEmails();
-}
-
-async function clearCache() {
-  try {
-    const result = await new Promise(resolve => {
-      chrome.runtime.sendMessage({ action: 'clearEmailCache' }, resolve);
-    });
-
-    if (result.success) {
-      // Hide cache status
-      document.getElementById('cacheStatus').style.display = 'none';
-
-      // Clear displayed data
-      document.getElementById('emailSummary').style.display = 'none';
-      document.getElementById('todoList').innerHTML = '';
-
-      // Show success message
-      const statusDiv = document.getElementById('emailAnalysisStatus');
-      statusDiv.style.display = 'block';
-      statusDiv.innerHTML = '✅ Cache cleared successfully';
-      statusDiv.style.color = '#059669';
-
-      setTimeout(() => {
-        statusDiv.style.display = 'none';
-      }, 3000);
-    }
-  } catch (error) {
-    console.error('Error clearing cache:', error);
-  }
-}
 
 async function testGmailConnection() {
   const statusDiv = document.getElementById('emailAnalysisStatus');
@@ -776,5 +777,71 @@ async function testGmailConnection() {
     statusDiv.style.color = '#ef4444';
   } finally {
     testBtn.disabled = false;
+  }
+}
+
+async function handleSpamAction(action, spamId, spamDiv) {
+  try {
+    if (action === 'delete') {
+      // Show confirmation
+      if (!confirm('Are you sure you want to delete this email? This action cannot be undone.')) {
+        return;
+      }
+      
+      // Call Gmail API to delete the email
+      const deleteResult = await new Promise(resolve => {
+        chrome.runtime.sendMessage({ 
+          action: 'deleteSpamEmail', 
+          emailId: spamId 
+        }, resolve);
+      });
+      
+      if (deleteResult.success) {
+        // Remove from UI and cache
+        spamDiv.remove();
+        cachedSpamEmails = cachedSpamEmails.filter(spam => spam.id !== spamId);
+        
+        // Update counter
+        const spamCount = document.getElementById('spamEmails');
+        spamCount.textContent = cachedSpamEmails.length;
+        
+        showSuccess('Email deleted successfully');
+        
+        // Update the display if no spam emails left
+        if (cachedSpamEmails.length === 0) {
+          const todoListDiv = document.getElementById('todoList');
+          todoListDiv.innerHTML = '<div class="no-todos">🎉 No spam emails detected today!</div>';
+        }
+      } else {
+        showError(deleteResult.error || 'Failed to delete email');
+      }
+    } else if (action === 'ignore') {
+      // Mark as not spam (remove from spam list)
+      spamDiv.style.opacity = '0.5';
+      spamDiv.innerHTML += '<div style="text-align: center; margin-top: 8px; color: #16a34a;">✅ Marked as not spam</div>';
+      
+      // Remove from cache
+      cachedSpamEmails = cachedSpamEmails.filter(spam => spam.id !== spamId);
+      
+      // Update counter
+      const spamCount = document.getElementById('spamEmails');
+      spamCount.textContent = cachedSpamEmails.length;
+      
+      showSuccess('Email marked as not spam');
+      
+      // Remove from UI after a delay
+      setTimeout(() => {
+        spamDiv.remove();
+        
+        // Update the display if no spam emails left
+        if (cachedSpamEmails.length === 0) {
+          const todoListDiv = document.getElementById('todoList');
+          todoListDiv.innerHTML = '<div class="no-todos">🎉 No spam emails detected today!</div>';
+        }
+      }, 2000);
+    }
+  } catch (error) {
+    console.error('Spam action error:', error);
+    showError('Action failed. Please try again.');
   }
 }
